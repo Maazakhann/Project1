@@ -223,7 +223,7 @@ public:
         : view(sf::FloatRect({ 0.f, 0.f }, { width, height }))
     {
         cameraVelocity = 0.f;
-        cameraFollowSpeed = 0.05f;
+        cameraFollowSpeed = 0.04f;
     }
 
     sf::View& getView()
@@ -231,7 +231,6 @@ public:
         return view;
     }
 
-    // functions for camera setup and movement
     float getCameraVelocity() const
     {
         return cameraVelocity;
