@@ -23,7 +23,7 @@ public:
        
         shape.setFillColor(sf::Color::Transparent);
         shape.setOutlineColor(color);
-        shape.setOutlineThickness(29.f);
+        shape.setOutlineThickness(25.f);
         shape.setRadius(150.f);
         shape.setOrigin({ 150.f, 150.f });
         shape.setPosition({ x, y });
