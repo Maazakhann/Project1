@@ -412,7 +412,7 @@ int main()
     float baseY = 100.f;
     float gap = 700.f;
 
-    float y1 = baseY + (rand() % 50);
+    float y1 = baseY + (rand() % 40);
     float y2 = baseY - gap + (rand() % 50);
     float y3 = baseY - 2 * gap + (rand() % 50);
     float y4 = baseY - 3 * gap + (rand() % 50);
