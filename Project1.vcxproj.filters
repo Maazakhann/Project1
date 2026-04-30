@@ -15,10 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sfml.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ball.cpp">
+    <ClCompile Include="ball1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

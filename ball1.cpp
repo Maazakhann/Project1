@@ -3,8 +3,32 @@
 #include <cstdlib>
 #include <ctime>
 #include<iostream>
+#include<cmath>
 
 using namespace std;
+sf::Color palette[4] = {
+    sf::Color(50, 226, 241),   // Cyan
+    sf::Color(255, 232, 15),   // Yellow
+    sf::Color(140, 18, 251),   // Violet
+    sf::Color(255, 0, 128)     // Pink
+};
+sf::Color getRandomPaletteColor()
+{
+    return palette[rand() % 4];
+}
+void getShuffledColors(sf::Color colors[4])
+{
+    // Copy palette
+    for (int i = 0; i < 4; i++)
+        colors[i] = palette[i];
+
+    // Shuffle (Fisher-Yates)
+    for (int i = 3; i > 0; i--)
+    {
+        int j = rand() % (i + 1);
+        std::swap(colors[i], colors[j]);
+    }
+}
 class Shape
 {
 public:
@@ -23,8 +47,9 @@ public:
        
         shape.setFillColor(sf::Color::Transparent);
         shape.setOutlineColor(color);
-        shape.setOutlineThickness(30.f);
+        shape.setOutlineThickness(20.f);
         shape.setRadius(150.f);
+        shape.setPointCount(100);
         shape.setOrigin({ 150.f, 150.f });
         shape.setPosition({ x, y });
     }
@@ -34,95 +59,175 @@ public:
         window.draw(shape);
     }
 };
+
 class RectangleShapeObj : public Shape
 {
 private:
-    sf::RectangleShape shape;
+    sf::RectangleShape top, bottom, left, right;
 
 public:
-    RectangleShapeObj(float x, float y, sf::Color color)
+    RectangleShapeObj(float x, float y)
     {
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(color);
-        shape.setOutlineThickness(30.f);
-        shape.setSize({ 250.f, 250.f });
-        shape.setOrigin({ 125.f, 125.f });
-        shape.setPosition({ x, y });
+        float size = 250.f;
+        float thick = 20.f;
+
+        top.setSize({ size, thick });
+        bottom.setSize({ size, thick });
+        left.setSize({ thick, size });
+        right.setSize({ thick, size });
+
+        top.setOrigin({ size / 2.f, thick / 2.f });
+        bottom.setOrigin({ size / 2.f, thick / 2.f });
+        left.setOrigin({ thick / 2.f, size / 2.f });
+        right.setOrigin({ thick / 2.f, size / 2.f });
+        top.setPosition({ x, y - size / 2.f });
+        bottom.setPosition({ x, y + size / 2.f });
+
+        left.setPosition({ x - size / 2.f + thick / 2.f, y });
+        right.setPosition({ x + size / 2.f - thick / 2.f, y });
+sf::Color colors[4];
+getShuffledColors(colors);
+
+top.setFillColor(colors[0]);
+bottom.setFillColor(colors[1]);
+left.setFillColor(colors[2]);
+right.setFillColor(colors[3]);
     }
+
     void draw(sf::RenderWindow& window) override
     {
-        window.draw(shape);
+        window.draw(left);
+        window.draw(right);
+        window.draw(top);
+        window.draw(bottom);
     }
 };
 class TriangleShapeObj : public Shape
 {
 private:
-    sf::CircleShape shape;
+    sf::RectangleShape left, right, bottom;
 
 public:
-    TriangleShapeObj(float x, float y, sf::Color color)
+    TriangleShapeObj(float x, float y)
     {
-   
-        shape = sf::CircleShape(200.f, 3);
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(color);
-        shape.setOutlineThickness(30.f);
-        shape.setOrigin({ 200.f, 200.f });
-        shape.setPosition({ x, y });
+        float base = 260.f;     
+        float thickness = 20.f;
+        float angle = 60.f;
+
+        // Correct side length (same as base for equilateral triangle)
+        float sideLength = base+5.f;
+
+        sf::Color colors[4];
+        getShuffledColors(colors);
+
+        float baseY = y + 80.f;
+
+        // Bottom
+        bottom.setSize({ base, thickness });
+        bottom.setOrigin({ base / 2.f, thickness / 2.f });
+        bottom.setPosition({ x, baseY });
+        bottom.setFillColor(colors[0]);
+
+        // Left side
+        left.setSize({ sideLength, thickness });
+        left.setOrigin({ 0.f, thickness / 2.f });
+        left.setPosition({ x - base / 2.f, baseY });
+        left.setRotation(sf::degrees(-angle));
+        left.setFillColor(colors[1]);
+
+        // Right side
+        right.setSize({ sideLength, thickness });
+        right.setOrigin({ sideLength, thickness / 2.f });
+        right.setPosition({ x + base / 2.f, baseY });
+        right.setRotation(sf::degrees(angle));
+        right.setFillColor(colors[2]);
     }
 
     void draw(sf::RenderWindow& window) override
     {
-        window.draw(shape);
+        window.draw(left);
+        window.draw(right);
+        window.draw(bottom);
     }
 };
-
 class HorizontalLine : public Shape
 {
 private:
-    sf::RectangleShape line;
+    sf::RectangleShape parts[4];
 
 public:
-    HorizontalLine(float y2, float width, sf::Color color)
+    HorizontalLine(float y, float width)
     {
-        line.setSize({ width, 20.f });
-        line.setFillColor(color);
+        float segmentWidth = width / 4.f;
 
-        line.setOrigin({ width / 2.f, 10.f });
-        line.setPosition({ width / 2.f, y2 });
+        sf::Color colors[4];
+        getShuffledColors(colors);
+
+        for (int i = 0; i < 4; i++)
+        {
+            parts[i].setSize({ segmentWidth, 20.f });
+            parts[i].setFillColor(colors[i]);
+
+            parts[i].setOrigin({ segmentWidth / 2.f, 10.f });
+            parts[i].setPosition({
+                segmentWidth / 2.f + i * segmentWidth,
+                y
+                });
+        }
     }
 
     void draw(sf::RenderWindow& window) override
     {
-        window.draw(line);
+        for (int i = 0; i < 4; i++)
+            window.draw(parts[i]);
     }
 };
 class PlusShape : public Shape
 {
 private:
-    sf::RectangleShape horizontal;
-    sf::RectangleShape vertical;
+    sf::RectangleShape left, right, top, bottom;
 
 public:
-    PlusShape(float x, float y, float size, sf::Color color)
+    PlusShape(float x, float y, float size)
     {
-        // Horizontal line
-        horizontal.setSize({ size, 20.f });
-        horizontal.setFillColor(color);
-        horizontal.setOrigin({ size / 2.f, 10.f });
-        horizontal.setPosition({ x, y });
+        float thickness = 20.f;
+        float half = size / 2.f;
 
-        // Vertical line
-        vertical.setSize({ 20.f, size });
-        vertical.setFillColor(color);
-        vertical.setOrigin({ 10.f, size / 2.f });
-        vertical.setPosition({ x, y });
+        sf::Color colors[4];
+        getShuffledColors(colors); // uses your palette
+
+        // LEFT arm
+        left.setSize({ half, thickness });
+        left.setOrigin({ half, thickness / 2.f });
+        left.setPosition({ x, y });
+        left.setFillColor(colors[0]);
+
+        // RIGHT arm
+        right.setSize({ half, thickness });
+        right.setOrigin({ 0.f, thickness / 2.f });
+        right.setPosition({ x, y });
+        right.setFillColor(colors[1]);
+
+        // TOP arm
+        top.setSize({ thickness, half });
+        top.setOrigin({ thickness / 2.f, half });
+        top.setPosition({ x, y });
+        top.setFillColor(colors[2]);
+
+        // BOTTOM arm
+        bottom.setSize({ thickness, half });
+        bottom.setOrigin({ thickness / 2.f, 0.f });
+        bottom.setPosition({ x, y });
+        bottom.setFillColor(colors[3]);
     }
 
     void draw(sf::RenderWindow& window) override
     {
-        window.draw(horizontal);
-        window.draw(vertical);
+        // IMPORTANT: order controls clean center
+        window.draw(top);
+        window.draw(bottom);
+        window.draw(left);
+        window.draw(right);
     }
 };
 class StarCollectible : public Shape
@@ -132,21 +237,23 @@ private:
     sf::Sprite sprite;
 
 public:
-    StarCollectible(float x, float y):sprite(texture){
+    StarCollectible(float x, float y) : sprite(texture)
+    {
         if (!texture.loadFromFile("Star.png"))
         {
-            std::cout << "❌ Star NOT loaded\n";
+            cout << "Star NOT loaded\n";
         }
         else
         {
-            std::cout << "✅ Star loaded successfully\n";
+            cout << "Star loaded successfully\n";
         }
-        sprite.setTexture(texture);
+
+        sprite.setTexture(texture, true);
 
         sf::FloatRect bounds = sprite.getLocalBounds();
         sprite.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
-        sprite.setColor(sf::Color(255, 255, 0));
-        sprite.setScale({ 0.3f, 0.3f });
+
+        sprite.setScale({ .3f, .3f });   // bigger for testing
         sprite.setPosition({ x, y });
     }
 
@@ -154,8 +261,7 @@ public:
     {
         window.draw(sprite);
     }
-};
-class Ball
+}; class Ball
 {
 private:
     sf::CircleShape circle;
@@ -262,22 +368,26 @@ public:
     }
 };
 
-void handleEvents(sf::RenderWindow& window)
+void handleEvents(sf::RenderWindow& window, Ball& ball, float jumpStrength)
 {
-    while (const std::optional event = window.pollEvent())
+    while (auto event = window.pollEvent())
     {
         if (event->is<sf::Event::Closed>())
+        {
             window.close();
+        }
+
+        if (const auto* key = event->getIf<sf::Event::KeyPressed>())
+        {
+            if (key->scancode == sf::Keyboard::Scan::Space)
+            {
+                ball.setVelocityY(jumpStrength);
+            }
+        }
     }
 }
 
-void handleInput(Ball& ball, float jumpStrength)
-{
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Space))
-    {
-        ball.setVelocityY(jumpStrength);
-    }
-}
+
 
 void applyGravity(Ball& ball, float gravity)
 {
@@ -358,23 +468,23 @@ void spawnShape(Shape**& shapes, int& count, int& capacity, float x, float y, fl
 {
     int type = rand() % 5;
 
-    if (type == 0)
-        addShape(shapes, count, capacity, new CircleShapeObj(x, y, sf::Color::Red));
+    if (type == 0) 
+        addShape(shapes, count, capacity, new CircleShapeObj(x, y));
 
     else if (type == 1)
-        addShape(shapes, count, capacity, new RectangleShapeObj(x, y, sf::Color::Green));
+        addShape(shapes, count, capacity, new RectangleShapeObj(x, y));
 
     else if (type == 2)
-        addShape(shapes, count, capacity, new TriangleShapeObj(x, y, sf::Color::Yellow));
+        addShape(shapes, count, capacity, new TriangleShapeObj(x, y));
 
     else if (type == 3)
-        addShape(shapes, count, capacity, new HorizontalLine(y, width, sf::Color::White));
+        addShape(shapes, count, capacity, new HorizontalLine(y, width));
 
     else
     {
-        float gapX = 200.f;
-        addShape(shapes, count, capacity, new PlusShape(x - gapX / 2.f, y, 150.f, sf::Color::Cyan));
-        addShape(shapes, count, capacity, new PlusShape(x + gapX / 2.f, y, 150.f, sf::Color::Magenta));
+        float gapX = 170.f;
+        addShape(shapes, count, capacity, new PlusShape(x - gapX / 2.f, y, 150.f));
+        addShape(shapes, count, capacity, new PlusShape(x + gapX / 2.f, y, 150.f));
     }
     addShape(shapes, count, capacity, new StarCollectible(x, y));
 }
@@ -398,10 +508,11 @@ int main()
     const float groundY = 880.f;   // where the ball is placed initaially
 
     float gravity = 0.5f;          // speed of gravity
-    float jumpStrength = -6.f;     // speed gained by ball on pressing spacebar
+    float jumpStrength = -10.f;     // speed gained by ball on pressing spacebar
 
     sf::RenderWindow window(sf::VideoMode({ width, height }), "SFML Window");
     window.setFramerateLimit(60);
+    window.setKeyRepeatEnabled(false);
     srand(time(0));
     float centerX = width / 2.f;
 
@@ -412,7 +523,7 @@ int main()
     float baseY = 100.f;
     float gap = 700.f;
 
-    float y1 = baseY + (rand() % 40);
+    float y1 = baseY + (rand() % 50);
     float y2 = baseY - gap + (rand() % 50);
     float y3 = baseY - 2 * gap + (rand() % 50);
     float y4 = baseY - 3 * gap + (rand() % 50);
@@ -430,20 +541,18 @@ int main()
         lastSpawnY -= gap;
     }
     Ball ball(20.0f, width / 2.f, groundY);
-    addShape(shapes, count, capacity, new StarCollectible(width / 2.f, 600.f));
     Camera camera((float)width, (float)height);
     while (window.isOpen())
     {
-        handleEvents(window);
-        handleInput(ball, jumpStrength);
+        handleEvents(window, ball, jumpStrength);
         applyGravity(ball, gravity);
         moveBall(ball);
         resetBallOnGround(ball, groundY);
         updateCamera(camera, ball, width, height);
         if (ball.getPosition().y < lastSpawnY + gap)
         {
-            lastSpawnY -= gap;
             spawnShape(shapes, count, capacity, centerX, lastSpawnY, width);
+            lastSpawnY -= gap;
         }
         window.setView(camera.getView());
         drawWindow(window, ball,shapes,count);
